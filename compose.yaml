@@ -1,0 +1,120 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    container_name: atividade5-rabbitmq
+    hostname: rabbitmq
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - rede-sistema
+
+  rabbitmq-init:
+    image: curlimages/curl:8.12.1
+    container_name: atividade5-rabbitmq-init
+
+    environment:
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+
+    volumes:
+      - ./rabbitmq/definitions.json:/definitions.json:ro
+      - ./rabbitmq/init-definitions.sh:/init-definitions.sh:ro
+
+    entrypoint: ["/bin/sh", "/init-definitions.sh"]
+
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - rede-sistema
+
+    restart: "no"
+
+  gerador:
+    image: atividade5-gerador:1.0
+    build:
+      context: ./gerador
+    container_name: atividade5-gerador
+
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+
+    depends_on:
+      rabbitmq-init:
+        condition: service_completed_successfully
+
+    networks:
+      - rede-sistema
+
+    restart: unless-stopped
+
+  consumidor-avaliacoes:
+    image: atividade5-avaliacoes:1.0
+    build:
+      context: ./consumidor-avaliacoes
+    container_name: atividade5-avaliacoes
+
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+
+    depends_on:
+      rabbitmq-init:
+        condition: service_completed_successfully
+
+    networks:
+      - rede-sistema
+
+    restart: unless-stopped
+
+  consumidor-suporte:
+    image: atividade5-suporte:1.0
+    build:
+      context: ./consumidor-suporte
+    container_name: atividade5-suporte
+
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+
+    depends_on:
+      rabbitmq-init:
+        condition: service_completed_successfully
+
+    networks:
+      - rede-sistema
+
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  rede-sistema:
+    driver: bridge

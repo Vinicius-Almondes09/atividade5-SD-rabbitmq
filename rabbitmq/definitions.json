@@ -1,0 +1,111 @@
+{
+    "vhosts":  [
+                   {
+                       "name":  "/"
+                   }
+               ],
+    "exchanges":  [
+                      {
+                          "name":  "mensagens.topic",
+                          "vhost":  "/",
+                          "type":  "topic",
+                          "durable":  true,
+                          "auto_delete":  false,
+                          "internal":  false,
+                          "arguments":  {
+
+                                        }
+                      },
+                      {
+                          "name":  "mensagens.dlx",
+                          "vhost":  "/",
+                          "type":  "direct",
+                          "durable":  true,
+                          "auto_delete":  false,
+                          "internal":  false,
+                          "arguments":  {
+
+                                        }
+                      }
+                  ],
+    "queues":  [
+                   {
+                       "name":  "fila.dlq",
+                       "vhost":  "/",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "arguments":  {
+                                         "x-queue-type":  "classic"
+                                     }
+                   },
+                   {
+                       "name":  "fila.avaliacoes",
+                       "vhost":  "/",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "arguments":  {
+                                         "x-queue-type":  "classic"
+                                     }
+                   },
+                   {
+                       "name":  "fila.suporte",
+                       "vhost":  "/",
+                       "durable":  true,
+                       "auto_delete":  false,
+                       "arguments":  {
+                                         "x-queue-type":  "classic"
+                                     }
+                   }
+               ],
+    "bindings":  [
+                     {
+                         "source":  "mensagens.dlx",
+                         "vhost":  "/",
+                         "destination":  "fila.dlq",
+                         "destination_type":  "queue",
+                         "routing_key":  "mensagem.erro",
+                         "arguments":  {
+
+                                       }
+                     },
+                     {
+                         "source":  "mensagens.topic",
+                         "vhost":  "/",
+                         "destination":  "fila.avaliacoes",
+                         "destination_type":  "queue",
+                         "routing_key":  "review.product",
+                         "arguments":  {
+
+                                       }
+                     },
+                     {
+                         "source":  "mensagens.topic",
+                         "vhost":  "/",
+                         "destination":  "fila.suporte",
+                         "destination_type":  "queue",
+                         "routing_key":  "support.request",
+                         "arguments":  {
+
+                                       }
+                     }
+                 ],
+    "policies":  [
+                     {
+                         "vhost":  "/",
+                         "name":  "politica-dlq",
+                         "pattern":  "^fila\\.(avaliacoes|suporte)$",
+                         "apply-to":  "queues",
+                         "definition":  {
+                                            "dead-letter-exchange":  "mensagens.dlx",
+                                            "dead-letter-routing-key":  "mensagem.erro"
+                                        },
+                         "priority":  1
+                     }
+                 ],
+    "users":  [
+
+              ],
+    "permissions":  [
+
+                    ]
+}

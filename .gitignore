@@ -1,0 +1,33 @@
+# Credenciais e configuracoes locais
+.env
+.env.*
+!.env.example
+
+# Arquivos temporarios do Docker Compose
+compose.backup.yaml
+compose.teste*.yaml
+
+# Backups do RabbitMQ
+rabbitmq/definitions.backup.json
+rabbitmq/definitions.antes-usuario.json
+
+# Arquivos de compilacao Maven
+**/target/
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.iml
+
+# Arquivos temporarios
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+rabbitmq/definitions.local.json
+
+# Backups adicionais
+compose.antes-init.yaml
+rabbitmq/*.backup
+README.backup.md
+compose.validacao.yaml
